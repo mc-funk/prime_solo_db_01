@@ -26,18 +26,6 @@ MongoDB.on('open', function(err) {
   console.log('mongodb connection open')
 });
 
-passport.serializeUser(function(user, done) {
-  done(null, user.id);
-});
-
-passport.deserializeUser(function(id, done) {
-  User.findById(id, function(err, user){
-    if(err) done(err);
-    done(null, user);
-  });
-});
-
-
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -52,7 +40,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 passport.use('local', new localStrategy(
-    { passReqToCallback : true, _usernameField: 'username'},
+    { passReqToCallback : true, usernameField: 'username'},
     function(req, username, password, done){
       User.findOne({ username: username }, function(err, user) {
         if (err) throw err;
@@ -67,7 +55,17 @@ passport.use('local', new localStrategy(
     });
   });
 }));
-app.use('/register', register);
+
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(function(id, done) {
+  User.findById(id, function(err, user){
+    if(err) done(err);
+    done(null, user);
+  });
+});
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(__dirname + '/public/favicon.ico'));
@@ -79,6 +77,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
 app.use('/users', users);
+app.use('/register', register);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -86,6 +85,7 @@ app.use(function(req, res, next) {
   err.status = 404;
   next(err);
 });
+
 
 // error handlers
 
